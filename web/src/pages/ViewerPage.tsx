@@ -18,9 +18,11 @@ export const ViewerPage = () => {
   const [sprites, setSprites] = useState<BotSprite[]>([]);
   const [mouthOpen, setMouthOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
 
   const botRef = useRef<HTMLDivElement | null>(null);
   const playbackLock = useRef(false);
+  
   const mouthIntervalRef = useRef<ReturnType<typeof window.setInterval> | null>(null);
 
   useEffect(() => {
@@ -203,8 +205,18 @@ export const ViewerPage = () => {
     }
   }, [state.status, runSequence]);
 
+  useEffect(() => {
+    // Try to unlock audio context automatically on mount. Browsers may still
+    // block this if no user gesture is available; playback will fall back to
+    // HTML5 where necessary.
+    audioController.unlock().catch(() => {
+      // Silent failure — we purposely do not show any UI.
+    });
+  }, []);
+
   return (
     <div className="viewer-overlay">
+      {/* No audio gate or prompts — attempt automatic unlock only. */}
       <div className="bot-stage bot-stage--floating" ref={botRef}>
         {currentSprite ? (
           <img src={currentSprite.url} alt="Bot" className={mouthOpen ? 'bot-mouth-open' : 'bot-mouth-closed'} />
