@@ -11,11 +11,13 @@
     "dev": "concurrently -k -n api,web -c blue,green \"npm:dev --workspace api\" \"npm:dev --workspace web\"",
     "build": "npm run build --workspace api && npm run build --workspace web",
     "lint": "npm run lint --workspaces",
-    "format": "npm run format --workspaces"
+    "format": "npm run format --workspaces",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
     "ffmpeg-static": "^5.3.0",
+    "patch-package": "^8.0.1",
     "prettier": "^3.6.2"
   }
 }

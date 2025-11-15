@@ -1,27 +1,43 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TimerForm } from '@/components/TimerForm';
 import { timerService } from '@/services/timerService';
 import { useTimerChannel } from '@/hooks/useTimerChannel';
 import {
   entranceAnimationOptions,
   exitAnimationOptions,
-  defaultViewerPreferences,
   type ViewerPreferences
 } from '@/types/viewer';
+import { loadViewerPreferences, resolveViewerPreferences, saveViewerPreferences } from '@/lib/viewerPreferencesStorage';
 
 export const ConfigPage = () => {
   const { state, isConnected, socket } = useTimerChannel();
   const [isBusy, setIsBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [viewerToast, setViewerToast] = useState<string | null>(null);
-  const [viewerPrefs, setViewerPrefs] = useState<ViewerPreferences>(state.viewer ?? defaultViewerPreferences);
-  const [exitDelaySeconds, setExitDelaySeconds] = useState(() => Math.round((state.viewer?.exitDelayMs ?? defaultViewerPreferences.exitDelayMs) / 1000));
+  const getInitialViewerPrefs = () =>
+    resolveViewerPreferences(state.viewer, typeof window === 'undefined' ? null : loadViewerPreferences());
+  const [viewerPrefs, setViewerPrefs] = useState<ViewerPreferences>(getInitialViewerPrefs);
+  const [exitDelaySeconds, setExitDelaySeconds] = useState(() => Math.round(getInitialViewerPrefs().exitDelayMs / 1000));
   const [isSavingViewerPrefs, setIsSavingViewerPrefs] = useState(false);
+  const persistViewerPrefs = useCallback(
+    (prefs: ViewerPreferences, delaySeconds: number) => {
+      saveViewerPreferences({
+        ...prefs,
+        exitDelayMs: Math.max(0, delaySeconds) * 1000
+      });
+    },
+    []
+  );
 
   useEffect(() => {
-    setViewerPrefs(state.viewer ?? defaultViewerPreferences);
-    setExitDelaySeconds(Math.round((state.viewer?.exitDelayMs ?? defaultViewerPreferences.exitDelayMs) / 1000));
+    const resolved = resolveViewerPreferences(state.viewer, typeof window === 'undefined' ? null : loadViewerPreferences());
+    setViewerPrefs(resolved);
+    setExitDelaySeconds(Math.round(resolved.exitDelayMs / 1000));
   }, [state.viewer]);
+
+  useEffect(() => {
+    persistViewerPrefs(viewerPrefs, exitDelaySeconds);
+  }, [persistViewerPrefs, viewerPrefs, exitDelaySeconds]);
 
   const viewerUrl = useMemo(() => {
     if (typeof window === 'undefined') {
@@ -88,7 +104,12 @@ export const ConfigPage = () => {
   };
 
   return (
-    <div className="page-shell">
+    <div className="page-shell retro-shell">
+      <header className="page-header">
+        <h1>[ xpzito ]</h1>
+        <p className="page-header__subtitle">Ajuste o cronômetro, teste o bot e compartilhe o link sem mistério.</p>
+      </header>
+
       <section className="panel">
         <div className="panel__header">
           <span className={`status-dot ${isConnected ? 'online' : 'offline'}`} />

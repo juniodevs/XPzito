@@ -4,11 +4,8 @@ import { mediaService } from '@/services/mediaService';
 import { audioController } from '@/lib/audioController';
 import { useTimerChannel } from '@/hooks/useTimerChannel';
 import type { AudioLibrary, BotSprite } from '@/types/media';
-import {
-  defaultViewerPreferences,
-  type ViewerEntranceAnimation,
-  type ViewerExitAnimation
-} from '@/types/viewer';
+import { type ViewerEntranceAnimation, type ViewerExitAnimation } from '@/types/viewer';
+import { loadViewerPreferences, resolveViewerPreferences } from '@/lib/viewerPreferencesStorage';
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
@@ -168,16 +165,20 @@ export const ViewerPage = () => {
     stopMouthAnimation();
   }, [audioLibrary]);
 
+  const viewer = useMemo(
+    () => resolveViewerPreferences(state.viewer, typeof window === 'undefined' ? null : loadViewerPreferences()),
+    [state.viewer]
+  );
+
   const runSequence = useCallback(async () => {
     if (playbackLock.current || !audioLibrary || !sprites.length) {
       return;
     }
-    const viewer = state.viewer ?? defaultViewerPreferences;
     playbackLock.current = true;
     try {
       await Promise.all([animateEntrance(viewer.entranceAnimation), playTransition('in')]);
       await playRandomSpeech();
-      await wait(Math.max(0, viewer.exitDelayMs ?? defaultViewerPreferences.exitDelayMs));
+      await wait(Math.max(0, viewer.exitDelayMs));
       await Promise.all([animateExit(viewer.exitAnimation), playTransition('out')]);
       socket.emit('timer:ack-trigger');
     } catch (err) {
@@ -187,7 +188,7 @@ export const ViewerPage = () => {
       playbackLock.current = false;
       stopMouthAnimation();
     }
-  }, [animateEntrance, animateExit, audioLibrary, playRandomSpeech, playTransition, socket, sprites.length, state.viewer]);
+  }, [animateEntrance, animateExit, audioLibrary, playRandomSpeech, playTransition, socket, sprites.length, viewer]);
 
   useEffect(() => {
     const handler = () => runSequence();
