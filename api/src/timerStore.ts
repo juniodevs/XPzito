@@ -2,6 +2,24 @@ import { EventEmitter } from 'node:events';
 
 export type TimerStatus = 'idle' | 'running' | 'triggered';
 
+export const entranceAnimations = ['slide-up', 'pop-bounce'] as const;
+export type ViewerEntranceAnimation = (typeof entranceAnimations)[number];
+
+export const exitAnimations = ['slide-down', 'spin-fall'] as const;
+export type ViewerExitAnimation = (typeof exitAnimations)[number];
+
+export interface ViewerPreferences {
+  entranceAnimation: ViewerEntranceAnimation;
+  exitAnimation: ViewerExitAnimation;
+  exitDelayMs: number;
+}
+
+export const defaultViewerPreferences: ViewerPreferences = {
+  entranceAnimation: 'slide-up',
+  exitAnimation: 'slide-down',
+  exitDelayMs: 4000
+};
+
 export interface TimerState {
   durationSeconds: number;
   remainingSeconds: number;
@@ -9,6 +27,7 @@ export interface TimerState {
   startedAt?: number;
   endsAt?: number;
   updatedAt: number;
+  viewer: ViewerPreferences;
 }
 
 export class TimerStore extends EventEmitter {
@@ -16,7 +35,8 @@ export class TimerStore extends EventEmitter {
     durationSeconds: 0,
     remainingSeconds: 0,
     status: 'idle',
-    updatedAt: Date.now()
+    updatedAt: Date.now(),
+    viewer: { ...defaultViewerPreferences }
   };
 
   private ticker?: NodeJS.Timeout;
@@ -33,7 +53,8 @@ export class TimerStore extends EventEmitter {
       status: 'running',
       startedAt: now,
       endsAt: this.targetTimestamp,
-      updatedAt: now
+      updatedAt: now,
+      viewer: { ...(this.state.viewer ?? defaultViewerPreferences) }
     };
     this.emitUpdate();
     this.ticker = setInterval(() => this.handleTick(), 250);
@@ -46,7 +67,8 @@ export class TimerStore extends EventEmitter {
       durationSeconds: 0,
       remainingSeconds: 0,
       status: 'idle',
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      viewer: { ...(this.state.viewer ?? defaultViewerPreferences) }
     };
     this.emitUpdate();
   }
@@ -65,6 +87,19 @@ export class TimerStore extends EventEmitter {
 
   getState(): TimerState {
     return this.state;
+  }
+
+  updateViewerPreferences(preferences: Partial<ViewerPreferences>) {
+    const next: ViewerPreferences = {
+      ...(this.state.viewer ?? defaultViewerPreferences),
+      ...preferences
+    };
+    this.state = {
+      ...this.state,
+      viewer: next,
+      updatedAt: Date.now()
+    };
+    this.emitUpdate();
   }
 
   private handleTick() {

@@ -1,3 +1,6 @@
+import type { ViewerPreferences } from './viewer';
+import { defaultViewerPreferences } from './viewer';
+
 export type TimerStatus = 'idle' | 'running' | 'triggered';
 
 export interface TimerState {
@@ -7,11 +10,13 @@ export interface TimerState {
   startedAt?: number;
   endsAt?: number;
   updatedAt: number;
+  viewer: ViewerPreferences;
 }
 
 export const initialTimerState: TimerState = {
   durationSeconds: 0,
   remainingSeconds: 0,
   status: 'idle',
-  updatedAt: Date.now()
+  updatedAt: Date.now(),
+  viewer: defaultViewerPreferences
 };

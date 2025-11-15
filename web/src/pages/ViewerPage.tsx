@@ -4,6 +4,11 @@ import { mediaService } from '@/services/mediaService';
 import { audioController } from '@/lib/audioController';
 import { useTimerChannel } from '@/hooks/useTimerChannel';
 import type { AudioLibrary, BotSprite } from '@/types/media';
+import {
+  defaultViewerPreferences,
+  type ViewerEntranceAnimation,
+  type ViewerExitAnimation
+} from '@/types/viewer';
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
@@ -70,37 +75,73 @@ export const ViewerPage = () => {
     };
   }, []);
 
-  const animateEntrance = useCallback(() => {
+  const animateEntrance = useCallback((type: ViewerEntranceAnimation) => {
     const target = botRef.current;
     if (!target) {
       return Promise.resolve();
     }
-    gsap.set(target, { display: 'flex', yPercent: 140, opacity: 0 });
-    return new Promise<void>((resolve) => {
-      gsap.to(target, {
-        yPercent: 0,
-        opacity: 1,
-        duration: 1.15,
-        ease: 'power4.out',
-        onComplete: resolve
-      });
-    });
+    switch (type) {
+      case 'pop-bounce':
+        gsap.set(target, { display: 'flex', opacity: 0, scale: 0.8, yPercent: 0, rotation: 0 });
+        return new Promise<void>((resolve) => {
+          gsap.to(target, {
+            opacity: 1,
+            scale: 1,
+            duration: 0.85,
+            ease: 'back.out(2)',
+            onComplete: resolve
+          });
+        });
+      case 'slide-up':
+      default:
+        gsap.set(target, { display: 'flex', yPercent: 140, opacity: 0, rotation: 0 });
+        return new Promise<void>((resolve) => {
+          gsap.to(target, {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1.15,
+            ease: 'power4.out',
+            onComplete: resolve
+          });
+        });
+    }
   }, []);
 
-  const animateExit = useCallback(() => {
+  const animateExit = useCallback((type: ViewerExitAnimation) => {
     const target = botRef.current;
     if (!target) {
       return Promise.resolve();
     }
-    return new Promise<void>((resolve) => {
-      gsap.to(target, {
-        yPercent: 140,
-        opacity: 0,
-        duration: 1.1,
-        ease: 'power4.in',
-        onComplete: () => resolve()
-      });
-    });
+    switch (type) {
+      case 'spin-fall':
+        gsap.set(target, { transformOrigin: '50% 50%' });
+        return new Promise<void>((resolve) => {
+          const tl = gsap.timeline({ onComplete: resolve });
+          tl.to(target, {
+            yPercent: -15,
+            duration: 0.2,
+            ease: 'power1.out'
+          });
+          tl.to(target, {
+            yPercent: 160,
+            rotation: -720,
+            opacity: 0,
+            duration: 1.2,
+            ease: 'power2.in'
+          });
+        });
+      case 'slide-down':
+      default:
+        return new Promise<void>((resolve) => {
+          gsap.to(target, {
+            yPercent: 140,
+            opacity: 0,
+            duration: 1.1,
+            ease: 'power4.in',
+            onComplete: () => resolve()
+          });
+        });
+    }
   }, []);
 
   const playTransition = useCallback(
@@ -129,12 +170,13 @@ export const ViewerPage = () => {
     if (playbackLock.current || !audioLibrary || !sprites.length) {
       return;
     }
+    const viewer = state.viewer ?? defaultViewerPreferences;
     playbackLock.current = true;
     try {
-      await Promise.all([animateEntrance(), playTransition('in')]);
+      await Promise.all([animateEntrance(viewer.entranceAnimation), playTransition('in')]);
       await playRandomSpeech();
-      await wait(4000);
-      await Promise.all([animateExit(), playTransition('out')]);
+      await wait(Math.max(0, viewer.exitDelayMs ?? defaultViewerPreferences.exitDelayMs));
+      await Promise.all([animateExit(viewer.exitAnimation), playTransition('out')]);
       socket.emit('timer:ack-trigger');
     } catch (err) {
       console.error(err);
@@ -143,7 +185,7 @@ export const ViewerPage = () => {
       playbackLock.current = false;
       stopMouthAnimation();
     }
-  }, [animateEntrance, animateExit, audioLibrary, playRandomSpeech, playTransition, socket, sprites.length]);
+  }, [animateEntrance, animateExit, audioLibrary, playRandomSpeech, playTransition, socket, sprites.length, state.viewer]);
 
   useEffect(() => {
     const handler = () => runSequence();

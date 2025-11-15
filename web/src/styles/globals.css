@@ -122,7 +122,8 @@ button {
   color: #f8fafc;
 }
 
-.timer-form input[type='number'] {
+.timer-form input[type='number'],
+.form-input {
   width: 100%;
   padding: 14px 16px;
   border-radius: 14px;
@@ -130,6 +131,18 @@ button {
   border: 1px solid rgba(148, 163, 184, 0.3);
   color: #f8fafc;
   font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+
+.form-select {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #f8fafc;
+  font-size: 1rem;
+  margin-bottom: 12px;
 }
 
 .timer-form__presets {

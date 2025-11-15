@@ -1,5 +1,10 @@
 import { Router } from 'express';
-import { TimerStore } from '../timerStore';
+import {
+  TimerStore,
+  entranceAnimations,
+  exitAnimations,
+  type ViewerPreferences
+} from '../timerStore';
 
 export const timerRouter = (store: TimerStore) => {
   const router = Router();
@@ -29,6 +34,36 @@ export const timerRouter = (store: TimerStore) => {
 
   router.post('/ack-trigger', (_req, res) => {
     store.acknowledgeTrigger();
+    res.json(store.getState());
+  });
+
+  router.post('/viewer-preferences', (req, res) => {
+    const { entranceAnimation, exitAnimation, exitDelayMs } = req.body ?? {};
+    const payload: Partial<ViewerPreferences> = {};
+
+    if (entranceAnimation !== undefined) {
+      if (!entranceAnimations.includes(entranceAnimation)) {
+        return res.status(400).json({ message: 'entranceAnimation inválido' });
+      }
+      payload.entranceAnimation = entranceAnimation;
+    }
+
+    if (exitAnimation !== undefined) {
+      if (!exitAnimations.includes(exitAnimation)) {
+        return res.status(400).json({ message: 'exitAnimation inválido' });
+      }
+      payload.exitAnimation = exitAnimation;
+    }
+
+    if (exitDelayMs !== undefined) {
+      const parsedDelay = Number(exitDelayMs);
+      if (!Number.isFinite(parsedDelay) || parsedDelay < 0) {
+        return res.status(400).json({ message: 'exitDelayMs deve ser um número positivo' });
+      }
+      payload.exitDelayMs = Math.round(parsedDelay);
+    }
+
+    store.updateViewerPreferences(payload);
     res.json(store.getState());
   });
 
