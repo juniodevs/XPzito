@@ -8,6 +8,7 @@ const PUBLIC_MEDIA_DIR = isCompiled
   : path.resolve(__dirname, '../../public/media');
 const AUDIO_DIR = path.join(PUBLIC_MEDIA_DIR, 'audio');
 const BOT_DIR = path.join(PUBLIC_MEDIA_DIR, 'bot');
+const SUPPORTED_BOT_EXTENSIONS = new Set(['.svg', '.png']);
 
 const asMediaPath = (absoluteFilePath: string) => {
   const relative = path.relative(PUBLIC_MEDIA_DIR, absoluteFilePath).replace(/\\/g, '/');
@@ -46,7 +47,7 @@ export const mediaRouter = () => {
   });
 
   router.get('/bot', async (_req, res) => {
-    const botFiles = await safeReaddir(BOT_DIR);
+    const botFiles = (await safeReaddir(BOT_DIR)).filter((file) => SUPPORTED_BOT_EXTENSIONS.has(path.extname(file).toLowerCase()));
     res.json({
       sprites: botFiles.sort((a, b) => a.localeCompare(b)).map((file) => ({
         name: path.basename(file, path.extname(file)),
