@@ -148,7 +148,11 @@ export const ViewerPage = () => {
       if (!audioLibrary) {
         return Promise.resolve();
       }
-      return audioController.play(audioLibrary.transitions[direction]);
+      const src = audioLibrary.transitions[direction];
+      if (!src) {
+        return Promise.resolve();
+      }
+      return audioController.play(src);
     },
     [audioLibrary]
   );

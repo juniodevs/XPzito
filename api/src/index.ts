@@ -46,7 +46,18 @@ const timerStore = new TimerStore();
 
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use('/media', express.static(path.join(PUBLIC_DIR, 'media'), { maxAge: '1d' }));
+app.use(
+  '/media',
+  express.static(path.join(PUBLIC_DIR, 'media'), {
+    maxAge: 0,
+    etag: false,
+    setHeaders: (res) => {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  })
+);
 
 app.use('/api/timer', timerRouter(timerStore));
 app.use('/api/media', mediaRouter());

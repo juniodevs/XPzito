@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TimerForm } from '@/components/TimerForm';
+import { MediaLibraryManager } from '@/components/MediaLibraryManager';
 import { timerService } from '@/services/timerService';
 import { useTimerChannel } from '@/hooks/useTimerChannel';
 import {
@@ -14,6 +15,7 @@ export const ConfigPage = () => {
   const [isBusy, setIsBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [viewerToast, setViewerToast] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'timer' | 'library'>('timer');
   const getInitialViewerPrefs = () =>
     resolveViewerPreferences(state.viewer, typeof window === 'undefined' ? null : loadViewerPreferences());
   const [viewerPrefs, setViewerPrefs] = useState<ViewerPreferences>(getInitialViewerPrefs);
@@ -110,106 +112,133 @@ export const ConfigPage = () => {
         <p className="page-header__subtitle">Ajuste o cronômetro, teste o bot e compartilhe o link sem mistério.</p>
       </header>
 
-      <section className="panel">
-        <div className="panel__header">
-          <span className={`status-dot ${isConnected ? 'online' : 'offline'}`} />
-          {isConnected ? 'Conectado ao servidor' : 'Reconectando...'}
-        </div>
-        <TimerForm
-          state={state}
-          onStart={handleStart}
-          onCancel={handleCancel}
-          isBusy={isBusy}
-          onTest={handleTestAnimation}
-          canTest={isConnected}
-        />
-        {toast && <p className="panel__toast">{toast}</p>}
-      </section>
-
-      <section className="panel secondary">
-        <h2>Link do Bot</h2>
-        <p>Compartilhe este link com quem precisa visualizar o bot animado.</p>
-        <div className="share-box">
-          <span>{viewerUrl}</span>
-          <button
-            type="button"
-            onClick={() => {
-              if (navigator.clipboard?.writeText) {
-                navigator.clipboard.writeText(viewerUrl);
-              } else {
-                window.prompt('Copie o link', viewerUrl);
-              }
-            }}
-            aria-label="Copiar link"
-          >
-            Copiar
-          </button>
-        </div>
-      </section>
-
-      <section className="panel secondary">
-        <h2>Transições do Bot</h2>
-        <p>Defina os movimentos do bot na entrada/saída e quanto tempo ele permanece em tela.</p>
-
-        <label className="timer-form__label" htmlFor="entrance-animation">
-          Transição de entrada
-        </label>
-        <select
-          id="entrance-animation"
-          className="form-select"
-          value={viewerPrefs.entranceAnimation}
-          onChange={(event) => handleViewerChange({ entranceAnimation: event.currentTarget.value as ViewerPreferences['entranceAnimation'] })}
-        >
-          {entranceAnimationOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-
-        <label className="timer-form__label" htmlFor="exit-animation">
-          Transição de saída
-        </label>
-        <select
-          id="exit-animation"
-          className="form-select"
-          value={viewerPrefs.exitAnimation}
-          onChange={(event) => handleViewerChange({ exitAnimation: event.currentTarget.value as ViewerPreferences['exitAnimation'] })}
-        >
-          {exitAnimationOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-
-        <label className="timer-form__label" htmlFor="exit-delay">
-          Tempo antes de sair (segundos)
-        </label>
-        <input
-          id="exit-delay"
-          type="number"
-          min={0}
-          step={1}
-          className="form-input"
-          value={exitDelaySeconds}
-          onChange={(event) => {
-            const value = Number(event.currentTarget.value);
-            setExitDelaySeconds(Number.isFinite(value) ? value : 0);
-          }}
-        />
-
+      <div className="tab-bar" role="tablist">
         <button
           type="button"
-          className="timer-form__test"
-          onClick={handleSaveViewerPreferences}
-          disabled={isSavingViewerPrefs}
+          role="tab"
+          aria-selected={activeTab === 'timer'}
+          className={activeTab === 'timer' ? 'tab-button is-active' : 'tab-button'}
+          onClick={() => setActiveTab('timer')}
         >
-          {isSavingViewerPrefs ? 'Salvando...' : 'Salvar predefinições'}
+          Cronômetro
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'library'}
+          className={activeTab === 'library' ? 'tab-button is-active' : 'tab-button'}
+          onClick={() => setActiveTab('library')}
+        >
+          Biblioteca de mídia
+        </button>
+      </div>
 
-        {viewerToast && <p className="panel__toast">{viewerToast}</p>}
-      </section>
+      {activeTab === 'timer' ? (
+        <>
+          <section className="panel">
+            <div className="panel__header">
+              <span className={`status-dot ${isConnected ? 'online' : 'offline'}`} />
+              {isConnected ? 'Conectado ao servidor' : 'Reconectando...'}
+            </div>
+            <TimerForm
+              state={state}
+              onStart={handleStart}
+              onCancel={handleCancel}
+              isBusy={isBusy}
+              onTest={handleTestAnimation}
+              canTest={isConnected}
+            />
+            {toast && <p className="panel__toast">{toast}</p>}
+          </section>
+
+          <section className="panel secondary">
+            <h2>Link do Bot</h2>
+            <p>Compartilhe este link com quem precisa visualizar o bot animado.</p>
+            <div className="share-box">
+              <span>{viewerUrl}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (navigator.clipboard?.writeText) {
+                    navigator.clipboard.writeText(viewerUrl);
+                  } else {
+                    window.prompt('Copie o link', viewerUrl);
+                  }
+                }}
+                aria-label="Copiar link"
+              >
+                Copiar
+              </button>
+            </div>
+          </section>
+
+          <section className="panel secondary">
+            <h2>Transições do Bot</h2>
+            <p>Defina os movimentos do bot na entrada/saída e quanto tempo ele permanece em tela.</p>
+
+            <label className="timer-form__label" htmlFor="entrance-animation">
+              Transição de entrada
+            </label>
+            <select
+              id="entrance-animation"
+              className="form-select"
+              value={viewerPrefs.entranceAnimation}
+              onChange={(event) => handleViewerChange({ entranceAnimation: event.currentTarget.value as ViewerPreferences['entranceAnimation'] })}
+            >
+              {entranceAnimationOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+
+            <label className="timer-form__label" htmlFor="exit-animation">
+              Transição de saída
+            </label>
+            <select
+              id="exit-animation"
+              className="form-select"
+              value={viewerPrefs.exitAnimation}
+              onChange={(event) => handleViewerChange({ exitAnimation: event.currentTarget.value as ViewerPreferences['exitAnimation'] })}
+            >
+              {exitAnimationOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+
+            <label className="timer-form__label" htmlFor="exit-delay">
+              Tempo antes de sair (segundos)
+            </label>
+            <input
+              id="exit-delay"
+              type="number"
+              min={0}
+              step={1}
+              className="form-input"
+              value={exitDelaySeconds}
+              onChange={(event) => {
+                const value = Number(event.currentTarget.value);
+                setExitDelaySeconds(Number.isFinite(value) ? value : 0);
+              }}
+            />
+
+            <button
+              type="button"
+              className="timer-form__test"
+              onClick={handleSaveViewerPreferences}
+              disabled={isSavingViewerPrefs}
+            >
+              {isSavingViewerPrefs ? 'Salvando...' : 'Salvar predefinições'}
+            </button>
+
+            {viewerToast && <p className="panel__toast">{viewerToast}</p>}
+          </section>
+        </>
+      ) : (
+        <MediaLibraryManager />
+      )}
     </div>
   );
 };
