@@ -23,3 +23,11 @@ Thumbs.db
 # Misc
 *.log
 *.tmp
+
+# Media content
+api/public/media/audio/random/*
+!api/public/media/audio/random/.gitkeep
+api/public/media/audio/transition/*
+!api/public/media/audio/transition/.gitkeep
+api/public/media/bot/*
+!api/public/media/bot/.gitkeep
