@@ -31,10 +31,6 @@ body,
   padding: 0;
   min-height: 100vh;
   background-color: var(--retro-bg);
-  background-image:
-    radial-gradient(circle at 15% 20%, rgba(255, 71, 193, 0.18), transparent 45%),
-    radial-gradient(circle at 85% 0%, rgba(60, 246, 240, 0.18), transparent 40%),
-    linear-gradient(145deg, #030204 0%, #05091a 35%, #090017 65%, #050204 100%);
   color: #fdfdff;
 }
 
@@ -71,9 +67,7 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image:
-    repeating-linear-gradient(45deg, rgba(255, 71, 193, 0.08) 0 20px, transparent 20px 40px),
-    repeating-linear-gradient(-45deg, rgba(60, 246, 240, 0.08) 0 16px, transparent 16px 32px);
+  background-color: rgba(255, 255, 255, 0.02);
   opacity: 0.6;
   pointer-events: none;
   mix-blend-mode: screen;
@@ -116,8 +110,9 @@ button {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 71, 193, 0.4), transparent 65%);
-  filter: blur(2px);
+  background: var(--retro-pink);
+  opacity: 0.15;
+  filter: blur(40px);
   pointer-events: none;
   mix-blend-mode: screen;
 }
@@ -129,7 +124,8 @@ button {
   right: 5%;
   width: 160px;
   height: 160px;
-  background: linear-gradient(135deg, rgba(60, 246, 240, 0.35), transparent);
+  background: var(--retro-cyan);
+  opacity: 0.15;
   transform: rotate(8deg);
   pointer-events: none;
 }
@@ -147,17 +143,7 @@ button {
 
 .page-header::after,
 .page-header::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, rgba(255, 71, 193, 0.15), transparent 50%);
-  mix-blend-mode: screen;
-  pointer-events: none;
-}
-
-.page-header::before {
-  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0 2px, transparent 2px 6px);
-  opacity: 0.35;
+  display: none;
 }
 
 .page-header__eyebrow {
