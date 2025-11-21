@@ -22,6 +22,6 @@ export type ViewerPreferencesPayload = Partial<ViewerPreferences>;
 
 export const defaultViewerPreferences: ViewerPreferences = {
   entranceAnimation: 'slide-up',
-  exitAnimation: 'slide-down',
-  exitDelayMs: 4000
+  exitAnimation: 'spin-fall',
+  exitDelayMs: 0
 };
