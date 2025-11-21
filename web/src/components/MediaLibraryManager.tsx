@@ -159,6 +159,14 @@ export const MediaLibraryManager = () => {
 
   return (
     <div className="media-manager">
+      <div className="error-message" style={{ marginBottom: '24px', border: '2px dashed #ff4d5a' }}>
+        <strong>🚧 EM CONSTRUÇÃO 🚧</strong>
+        <p style={{ margin: '8px 0 0', fontSize: '0.9rem' }}>
+          AINDA ESTÁ SENDO CONTRUÍDA ESSA PARTE DO SITE, PODE SER QUE VOCÊ PASSE POR PROBLEMAS AO UTILIZAR ELE,
+          ACONSELHADO A MODIFICAÇÃO MANUAL
+        </p>
+      </div>
+
       {feedback?.type === 'success' && <p className="panel__toast">{feedback.message}</p>}
       {feedback?.type === 'error' && <p className="error-message">{feedback.message}</p>}
 
