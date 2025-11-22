@@ -5,6 +5,7 @@ import {
   exitAnimations,
   type ViewerPreferences
 } from '../timerStore';
+import { isPositiveNumber, isNonNegativeNumber } from '../utils/validation';
 
 export const timerRouter = (store: TimerStore) => {
   const router = Router();
@@ -15,15 +16,14 @@ export const timerRouter = (store: TimerStore) => {
 
   router.post('/start', (req, res) => {
     const { durationSeconds } = req.body ?? {};
-    const parsed = Number(durationSeconds);
 
-    if (!Number.isFinite(parsed) || parsed <= 0) {
+    if (!isPositiveNumber(durationSeconds)) {
       return res.status(400).json({
         message: 'durationSeconds deve ser um número maior que zero'
       });
     }
 
-    store.start(parsed);
+    store.start(durationSeconds);
     res.status(201).json(store.getState());
   });
 
@@ -56,11 +56,10 @@ export const timerRouter = (store: TimerStore) => {
     }
 
     if (exitDelayMs !== undefined) {
-      const parsedDelay = Number(exitDelayMs);
-      if (!Number.isFinite(parsedDelay) || parsedDelay < 0) {
+      if (!isNonNegativeNumber(exitDelayMs)) {
         return res.status(400).json({ message: 'exitDelayMs deve ser um número positivo' });
       }
-      payload.exitDelayMs = Math.round(parsedDelay);
+      payload.exitDelayMs = Math.round(exitDelayMs);
     }
 
     store.updateViewerPreferences(payload);

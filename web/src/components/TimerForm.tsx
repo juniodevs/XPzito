@@ -1,7 +1,5 @@
-import type { FormEvent } from 'react';
-import { useMemo, useState } from 'react';
 import type { TimerState } from '@/types/timer';
-import { formatDuration } from '@/lib/time';
+import { useTimerForm } from '@/hooks/useTimerForm';
 
 interface Props {
   state: TimerState;
@@ -19,47 +17,17 @@ const quickPresets = [
 ];
 
 export const TimerForm = ({ state, onStart, onCancel, isBusy = false, onTest, canTest = true }: Props) => {
-  const [seconds, setSeconds] = useState(() => Math.max(10, state.durationSeconds || 60));
-  const [message, setMessage] = useState<string | null>(null);
+  const {
+    seconds,
+    setSeconds,
+    message,
+    handleSubmit,
+    handleCancel,
+    startLabel,
+    stateLabel
+  } = useTimerForm({ state, onStart, onCancel });
 
   const disabled = isBusy;
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const safeSeconds = Math.max(1, Math.round(seconds));
-    if (safeSeconds <= 0) {
-      setMessage('Defina um tempo em segundos maior que zero.');
-      return;
-    }
-    try {
-      setMessage(null);
-      await onStart(safeSeconds);
-    } catch (error) {
-      const err = error as Error;
-      setMessage(err.message);
-    }
-  };
-
-  const startLabel = useMemo(() => {
-    if (state.status === 'running') {
-      return 'Atualizar tempo';
-    }
-    if (state.status === 'triggered') {
-      return 'Rearmar';
-    }
-    return 'Iniciar';
-  }, [state.status]);
-
-  const stateLabel = (() => {
-    switch (state.status) {
-      case 'running':
-        return `Bot toca em ${formatDuration(state.remainingSeconds)}`;
-      case 'triggered':
-        return 'Bot pronto para tocar (aguardando visualização).';
-      default:
-        return 'Cronômetro aguardando configuração.';
-    }
-  })();
 
   return (
     <form className="timer-form" onSubmit={handleSubmit}>
@@ -105,13 +73,7 @@ export const TimerForm = ({ state, onStart, onCancel, isBusy = false, onTest, ca
           type="button"
           className="secondary"
           disabled={disabled || state.status === 'idle'}
-          onClick={async () => {
-            try {
-              await onCancel();
-            } catch (err) {
-              setMessage((err as Error).message);
-            }
-          }}
+          onClick={handleCancel}
         >
           Cancelar
         </button>
