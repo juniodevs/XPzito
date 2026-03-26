@@ -1,6 +1,6 @@
 # XPzito 🤖
 
-> **⚠️ STATUS: EM CONSTRUÇÃO (Mas já utilizável!)**
+> **⚠️ AVISO DE DESCONTINUAÇÃO:** Este projeto está deprecado e uma nova versão pode ser encontrada neste novo repositório: [https://github.com/juniodevs/xpzito-v2](https://github.com/juniodevs/xpzito-v2)
 
 ## Sobre o Projeto
 
